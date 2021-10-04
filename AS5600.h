@@ -1,3 +1,6 @@
+#ifndef AS5600_h
+#define AS5600_h
+
 #include <mbed.h>
 
 #define _AS5600_CPR 4096
@@ -43,3 +46,5 @@ class AS5600
     long _getRegisters2(uint8_t registerMSB, uint8_t registerLSB);
     int _getRegister(uint8_t register1);
 };
+
+#endif
