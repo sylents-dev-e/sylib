@@ -24,6 +24,7 @@ uint64_t helper_get_uint64(const char *buffer, int32_t *index);
 
 void helper_append_float16(char* buffer, float number, float scale, int32_t *index);
 void helper_append_float32(char* buffer, float number, float scale, int32_t *index);
+void helper_append_float32_auto(char* buffer, float number, int32_t *index);
 
 float helper_get_float16(const char *buffer, float scale, int *index);
 float helper_get_float32(const char *buffer, float scale, int *index);

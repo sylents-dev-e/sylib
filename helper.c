@@ -127,6 +127,26 @@ void helper_append_float32(char* buffer, float number, float scale, int *index)
     helper_append_int32(buffer, (int)(number * scale), index);
 }
 
+void helper_append_float32_auto(char* buffer, float number, int *index) 
+{
+	int e = 0;
+	float sig = frexpf(number, &e);
+	float sig_abs = fabsf(sig);
+	unsigned int sig_i = 0;
+
+	if (sig_abs >= 0.5) {
+		sig_i = (unsigned int)((sig_abs - 0.5f) * 2.0f * 8388608.0f);
+		e += 126;
+	}
+
+	unsigned int res = ((e & 0xFF) << 23) | (sig_i & 0x7FFFFF);
+	if (sig < 0) {
+		res |= 1 << 31;
+	}
+
+	helper_append_uint32(buffer, res, index);
+}
+
 float helper_get_float16(const char *buffer, float scale, int *index) 
 {
     return (float)helper_get_int16(buffer, index) / scale;
