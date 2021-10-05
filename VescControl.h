@@ -37,7 +37,7 @@ class VescControl {
         int SetAppConfig(app_config_t* pAppConfig);
         
         // Getters
-        void GetMotorValues();
+        motor_values_t GetMotorValues();
         void GetFirmwareVersion();
         void GetMotorConfig(bool bReadDefaultConfig = false);
         void GetAppConfig(bool bReadDefaultConfig = false);

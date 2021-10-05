@@ -10,6 +10,7 @@ Debug::Debug(BufferedSerial* pserial)
  {
      // set baudrate
      m_pSerial->set_baud(115600);
+     m_pSerial->set_blocking(false);
      // opens file descriptor for reading and writing "r+"
      m_pFile = fdopen(m_pSerial,"r+");
  }

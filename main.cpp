@@ -4,6 +4,9 @@
  */
 
 #include "BufferedSerial.h"
+#include "DigitalOut.h"
+#include "Mutex.h"
+#include "ThisThread.h"
 #include "UnbufferedSerial.h"
 #include "mbed.h"
 
@@ -13,6 +16,7 @@
 #include "VescControl.h"
 #include "AS5600.h"
 #include "Debug.h"
+#include "AppData.h"
 
 // Blinking rate in milliseconds
 #define BLINKING_RATE     1000ms
@@ -26,82 +30,87 @@ BufferedSerial      uartDebug(UART1_TX, UART1_RX, 115200);
 //Debug               dbg(&uartDebug);
 VescControl         vesc(&uartvesc);
 
+AppData             appData;
+Mutex               appDataMutex;
+
 /*
 namespace mbed
 {
 	FileHandle *mbed_override_console(int fd)
 	{
-	    static BufferedSerial console(PA_2, PA_3, MBED_CONF_PLATFORM_STDIO_BAUD_RATE);
+	    static DirectSerial console(UART1_TX, UART1_RX, MBED_CONF_PLATFORM_STDIO_BAUD_RATE);
 		return &console;
 	}
 }*/
 
-// set baud rate of serial port to 115200
-/*
-static BufferedSerial uartDebug(UART1_TX, UART1_RX, 115200);
-FileHandle *mbed::mbed_override_console(int fd) {
-    return &uartDebug;
+Thread thread_100ms;
+Thread thread_200ms;
+Thread thread_500ms;
+Thread thread_1000ms;
+
+void task_100ms()
+{
+    while(true)
+    {
+        appDataMutex.lock();
+        appData.m_pos = as5600.getPosition();
+        appData.m_rpm = (appData.m_pos < 0 ) ? 0 : (500 + (appData.m_pos & MAX_RPM)); 
+        appDataMutex.unlock();
+
+        ThisThread::sleep_for(100ms);
+    }
 }
-*/
+
+void task_200ms()
+{
+    while(true)
+    {
+        led = !led;
+        appDataMutex.lock();        
+        vesc.SetRpm(appData.m_rpm);
+        appDataMutex.unlock();
+
+        ThisThread::sleep_for(200ms);
+    }
+}
+
+void task_500ms()
+{
+    while(true)
+    {
+        ThisThread::sleep_for(500ms);
+    }
+}
+
+void task_1000ms()
+{
+    while(true)
+    {
+        appDataMutex.lock();
+        appData.m_motorValues = vesc.GetMotorValues();
+        printf("\nVin: %d, RPM: %d", (int)appData.m_motorValues.v_in, (int)appData.m_motorValues.rpm);      
+        appDataMutex.unlock();
+
+        ThisThread::sleep_for(1000ms);
+    }
+}
+
+
+
+void init()
+{
+    printf("STARTING..");
+    as5600.setZero();
+    printf("ready!");
+}
 
 int main()
 {      
-    int angle = 0;
-    long pos = 0;
-    unsigned int rpm = 3000;
+    init();
 
-    uartvesc.set_blocking(false);
-    uartDebug.set_blocking(false);
-
-    printf("STARTING..");
-
-    as5600.setZero();
-
-    printf("ready!");
-
-    short readStatus = 0;
-
-    char buf[78] = {0};
-    char *pBuffer = (char*) vesc.GetRxBuff();
-
-    while (1) 
-    {
-        ThisThread::sleep_for(300ms);
-
-        pos = as5600.getPosition();
-
-        //printf("\n%ld", pos);
-
-        if( pos < 0 )
-        {
-            rpm = 0;
-        }
-        else
-        {
-            rpm = 500 + (pos & MAX_RPM);
-        }
-        
-        led = !led;
-
-        if( readStatus++ < 10 )
-        {
-            vesc.SetRpm(rpm);
-        }
-        else
-        {
-            readStatus = 0;
-            vesc.GetAppConfig();
-            //vesc.GetMotorConfig();
-            //vesc.GetMotorValues();
-
-            ThisThread::sleep_for(50ms); 
-
-            if( vesc.Read() )
-            {
-                uartDebug.write(pBuffer, PACKET_LENGTH_MOTOR_CONFIG);
-            }
-        }
-
-    }
+    thread_100ms.start(task_100ms);
+    thread_200ms.start(task_200ms);
+    thread_500ms.start(task_500ms);
+    thread_1000ms.start(task_1000ms);   
 }
 

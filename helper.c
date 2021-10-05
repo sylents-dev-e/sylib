@@ -1,5 +1,7 @@
 #include "helper.h"
 
+#include <math.h>
+#include <stdbool.h>
 
 void helper_append_int16(char* buffer, short number, int *index) 
 {
@@ -129,6 +131,7 @@ void helper_append_float32(char* buffer, float number, float scale, int *index)
 
 void helper_append_float32_auto(char* buffer, float number, int *index) 
 {
+    #if 0
 	int e = 0;
 	float sig = frexpf(number, &e);
 	float sig_abs = fabsf(sig);
@@ -145,6 +148,7 @@ void helper_append_float32_auto(char* buffer, float number, int *index)
 	}
 
 	helper_append_uint32(buffer, res, index);
+    #endif
 }
 
 float helper_get_float16(const char *buffer, float scale, int *index) 
@@ -159,6 +163,7 @@ float helper_get_float32(const char *buffer, float scale, int *index)
 
 float helper_get_float32_auto(const char *buffer, int *index) 
 {
+    #if 0
 	unsigned int res = helper_get_uint32(buffer, index);
 
 	int e = (res >> 23) & 0xFF;
@@ -179,6 +184,7 @@ float helper_get_float32_auto(const char *buffer, int *index)
 	}
 
 	return ldexpf(sig, e);
+    #endif
 }
 
 void * helper_memcpy(void *dest, const void *src, unsigned int len)

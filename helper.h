@@ -1,12 +1,12 @@
 #ifndef HELPER_H_
 #define HELPER_H_
 
-#include <stdint.h>
-#include <stddef.h>
-
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#include <stdint.h>
+#include <stddef.h>
 
 
 void helper_append_int16(char* buffer, int16_t number, int32_t *index);

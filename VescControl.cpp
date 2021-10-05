@@ -1,4 +1,5 @@
 #include "VescControl.h"
+#include "ThisThread.h"
 #include "helper.h"
 #include "crc.h"
 #include "datatypes.h"
@@ -88,6 +89,7 @@ int VescControl::SetDutyCycle(float dutyCycle)
 
 int VescControl::SetMotorConfig(motor_config_t* pMotorConfig)
 {    
+    #if 0
 	int payloadIndex = 0;
 	m_payloadBuff[payloadIndex++] = CMD_SET_MCCONF;
 
@@ -215,10 +217,14 @@ int VescControl::SetMotorConfig(motor_config_t* pMotorConfig)
 	m_payloadBuff[payloadIndex++] = pMotorConfig->m_out_aux_mode;
 
 	return send_command(payloadIndex);
+    #else
+    return 0;
+    #endif
 }
 
 int VescControl::SetAppConfig(app_config_t *pAppConfig)
 {
+    #if 0
     int payloadIndex = 0;
 	m_payloadBuff[payloadIndex++] = CMD_GET_APPCONF;
 
@@ -293,14 +299,17 @@ int VescControl::SetAppConfig(app_config_t *pAppConfig)
 	m_payloadBuff[payloadIndex++] = pAppConfig->app_nrf_conf.channel;
 
 	helper_memcpy(m_payloadBuff + payloadIndex, pAppConfig->app_nrf_conf.address, 3);
-    
+
 	payloadIndex += 3;
 	m_payloadBuff[payloadIndex++] = pAppConfig->app_nrf_conf.send_crc_ack;
 
     return send_command(payloadIndex);
+    #else
+    return 0;
+    #endif
 }
 
-void VescControl::GetMotorValues()
+motor_values_t VescControl::GetMotorValues()
 {
    int payloadIndex = 0;
     // set command id
@@ -308,6 +317,12 @@ void VescControl::GetMotorValues()
     // set requested id of the receive function
     m_cmdIdRequested = CMD_GET_VALUES;
     send_command(payloadIndex);  
+
+    ThisThread::sleep_for(50ms);
+
+    Read();
+
+    return m_motorValues;
 }
 
 void VescControl::GetFirmwareVersion()
@@ -359,12 +374,11 @@ void VescControl::SendAlive()
 bool VescControl::Read()
 {
     unsigned short crc_read;
-    unsigned int bytes_read = 0;
 
     // check requested id
     if( m_cmdIdRequested == CMD_GET_VALUES )
     {
-        if( (bytes_read = m_pSerial->read(m_rxData.rxBuff, PACKET_LENGTH_MOTOR_VALUES)) == PACKET_LENGTH_MOTOR_VALUES )
+        if( int bytes_read = m_pSerial->read(m_rxData.rxBuff, PACKET_LENGTH_MOTOR_VALUES) )
         {
             // check start and end byte
             if( (m_rxData.rxBuff[0] == VESC_START_BYTE_SMALL) && (m_rxData.rxBuff[PACKET_LENGTH_MOTOR_VALUES-1] == VESC_END_BYTE) )
@@ -389,7 +403,7 @@ bool VescControl::Read()
     }
     else if( m_cmdIdRequested == CMD_GET_MCCONF || m_cmdIdRequested == CMD_GET_MCCONF_DEFAULT )
     {
-        if( (bytes_read = m_pSerial->read(m_rxData.rxBuff, PACKET_LENGTH_MOTOR_CONFIG)) == PACKET_LENGTH_MOTOR_CONFIG )
+        if( int bytes_read = m_pSerial->read(m_rxData.rxBuff, PACKET_LENGTH_MOTOR_CONFIG) )
         {
             // check start and end byte
             if( (m_rxData.rxBuff[0] == VESC_START_BYTE_BIG) && (m_rxData.rxBuff[PACKET_LENGTH_MOTOR_CONFIG-1] == VESC_END_BYTE) )
@@ -412,7 +426,7 @@ bool VescControl::Read()
     }
     else if( m_cmdIdRequested == CMD_GET_APPCONF || m_cmdIdRequested == CMD_GET_APPCONF_DEFAULT )
     {
-        if( (bytes_read = m_pSerial->read(m_rxData.rxBuff, PACKET_LENGTH_APP_CONFIG)) == PACKET_LENGTH_APP_CONFIG )
+        if( int bytes_read = m_pSerial->read(m_rxData.rxBuff, PACKET_LENGTH_APP_CONFIG) )
         {
             // check start and end byte
             if( (m_rxData.rxBuff[0] == VESC_START_BYTE_BIG) && (m_rxData.rxBuff[PACKET_LENGTH_APP_CONFIG-1] == VESC_END_BYTE) )
