@@ -1,6 +1,7 @@
+#ifndef DEFINES_H
+#define DEFINES_H
 
-
-#ifdef TARGET_NUCLEO_F466RE
+#ifdef TARGET_NUCLEO_F446RE
 // I2C Definitions
 //    AS5600      as5600(PB_9, PB_8);
 #define I2C1_SDA PB_9
@@ -17,7 +18,9 @@
 #define UART3_TX PA_2
 #define UART3_RX PA_3
 
-#define PWM_IN PC_9
+#define PWM_IN   PC_9
+#define WS_OUT   D11
+
 #endif
 
 #ifdef TARGET_NUCLEO_L432KC
@@ -31,7 +34,8 @@
 #define UART2_TX PA_2  //PA_2
 #define UART2_RX PA_15 //PA_3
 
-#define PWM_IN PA_7
+#define PWM_IN   PA_7
+#define WS_OUT   D12
 
 #endif
 
@@ -40,3 +44,14 @@
 #define VESC_START_BYTE_BIG 0x3
 #define VESC_END_BYTE 0x3
 #define VESC_MAX_LENGTH 512
+
+// VESC curve related definitions
+#define RPM_START           500
+#define RPM_END             7800
+#define K1                  1.2f
+#define D1                  260            
+#define K2                  2.8f
+#define D2                  -4220
+#define P_TURN              2800
+
+#endif /* DEFINES_H */
